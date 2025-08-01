@@ -8,11 +8,7 @@ import UploadForm from '@/components/UploadForm';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
+// Le type PageProps a été supprimé pour éviter les conflits avec les types générés par Next.js.
 
 type Creative = {
   id: string;
@@ -27,7 +23,8 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
-export default async function ProjectPage({ params }: PageProps) {
+// Le type des props est maintenant défini directement dans la signature de la fonction.
+export default async function ProjectPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 

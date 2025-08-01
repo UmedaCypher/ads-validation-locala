@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image'; // Importer le composant Image
 import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
-
+// app/project/id/page.tsx 
 export const dynamic = 'force-dynamic';
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {

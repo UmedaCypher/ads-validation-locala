@@ -67,7 +67,7 @@ export default async function Home() {
                 ))
               ) : (
                 <div className="py-10 text-center text-slate-500">
-                  <p>Vous n&apos;avez pas encore de projet. Créez-en un ci-dessus !</p>
+                  <p>{`Vous n'avez pas encore de projet. Créez-en un ci-dessus !`}</p>
                 </div>
               )}
             </div>

@@ -1,5 +1,5 @@
 'use client'
-
+// src/app/creative/id/page.tsx
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';

@@ -83,7 +83,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
                             {latestVersion.file_url.endsWith('.mp4') ? (
                               <video src={latestVersion.file_url} muted playsInline className="object-cover w-full h-full" />
                             ) : (
-                              /* --- CORRECTION ICI --- */
                               <Image
                                 src={latestVersion.file_url}
                                 alt={group.name}

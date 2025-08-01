@@ -65,7 +65,6 @@ export default function UploadForm({ projectId }: Props) {
       if(fileInput) fileInput.value = "";
 
     } catch (e) {
-      // --- CORRECTION ICI ---
       // On vérifie le type de l'erreur pour y accéder en toute sécurité
       if (e instanceof Error) {
         setError(e.message);

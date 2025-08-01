@@ -8,11 +8,7 @@ import UploadForm from '@/components/UploadForm';
 
 export const dynamic = 'force-dynamic';
 
-interface ProjectPageProps {
-  params: {
-    id: string;
-  };
-}
+// L'interface ProjectPageProps a été supprimée.
 
 type Creative = {
   id: string;
@@ -27,7 +23,9 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
+// Le type des props est maintenant défini "en ligne", directement ici.
+// C'est la méthode la plus sûre pour éviter les conflits de types sur Vercel.
+export default async function ProjectPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 

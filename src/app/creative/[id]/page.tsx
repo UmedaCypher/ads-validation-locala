@@ -50,7 +50,7 @@ export default function CreativePage() {
 
       const { data: creativeData } = await supabase.from('creatives').select('*, creative_groups(id, name, project_id)').eq('id', creativeId).single();
       if (!creativeData) { router.push('/'); return; }
-      setCreative(creativeData as any);
+      setCreative(creativeData as Creative);
 
       if (creativeData.creative_groups?.id) {
         const { data: versionsData } = await supabase.from('creatives').select('id, version').eq('creative_group_id', creativeData.creative_groups.id).order('version', { ascending: true });
@@ -58,7 +58,7 @@ export default function CreativePage() {
       }
 
       const { data: commentsData } = await supabase.from('comments').select('*, profiles(full_name)').eq('creative_id', creativeId).order('created_at', { ascending: true });
-      if (commentsData) setComments(commentsData as any[]);
+      if (commentsData) setComments(commentsData as Comment[]);
       
       setLoading(false);
     };

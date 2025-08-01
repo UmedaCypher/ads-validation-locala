@@ -2,19 +2,38 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image'; // Importer le composant Image
+import Image from 'next/image';
 import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
-// app/project/id/page.tsx 
+
 export const dynamic = 'force-dynamic';
 
-export default async function ProjectPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  params: {
+    id: string;
+  };
+};
+
+type Creative = {
+  id: string;
+  file_url: string;
+  version: number;
+  status: string;
+};
+
+type CreativeGroup = {
+  id: string;
+  name: string;
+  creatives: Creative[];
+};
+
+export default async function ProjectPage({ params }: PageProps) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const { data: { user } } = await supabase.auth.getUser();
-  
   const projectId = params.id;
+
   const { data: project } = await supabase
     .from('projects')
     .select()
@@ -30,7 +49,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
     .select('*, creatives(*)')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
-  
+
   let userRole = 'client';
   if (user) {
     const { data: profile } = await supabase
@@ -94,7 +113,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
                           </div>
                         )}
                       </Link>
-                      
+
                       {(userRole === 'interne' || userRole === 'admin') && (
                         <form action={deleteCreativeGroup.bind(null, group.id, projectId)} className="ml-4 flex-shrink-0">
                           <button type="submit" className="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200">

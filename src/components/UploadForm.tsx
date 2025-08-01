@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
@@ -16,7 +16,7 @@ export default function UploadForm({ projectId }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0]);
     } else {
@@ -64,8 +64,14 @@ export default function UploadForm({ projectId }: Props) {
       const fileInput = document.getElementById('creative-file') as HTMLInputElement;
       if(fileInput) fileInput.value = "";
 
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      // --- CORRECTION ICI ---
+      // On vérifie le type de l'erreur pour y accéder en toute sécurité
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Une erreur inattendue est survenue.");
+      }
     } finally {
       setIsUploading(false);
     }

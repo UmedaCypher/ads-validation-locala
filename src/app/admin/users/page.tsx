@@ -1,14 +1,21 @@
-// Ce fichier est un Composant Serveur. Il ne doit PAS contenir 'use client'.
+// Ce fichier est un Composant Serveur.
 
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import RoleSelector from '@/components/RoleSelector'; // On importe le composant client séparé
+import RoleSelector from '@/components/RoleSelector';
 
 export const dynamic = 'force-dynamic';
 
-// --- Composant Principal de la Page (Serveur) ---
+// On définit un type pour les données de notre vue `user_profiles`
+type UserProfileView = {
+  id: string;
+  role: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 export default async function AdminUsersPage() {
   const supabase = createServerComponentClient({ cookies: () => cookies() });
 
@@ -16,14 +23,10 @@ export default async function AdminUsersPage() {
   if (!user) redirect('/login');
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  // Sécurité : Seuls les admins et internes peuvent voir cette page
   if (profile?.role !== 'admin' && profile?.role !== 'interne') {
     notFound();
   }
 
-  // --- CORRECTION FINALE ---
-  // On interroge la nouvelle vue `user_profiles` qui contient déjà les données jointes.
-  // C'est plus simple, plus robuste et cela va corriger l'erreur.
   const { data: users, error } = await supabase
     .from('user_profiles')
     .select('*');
@@ -48,13 +51,12 @@ export default async function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users?.map((u: any) => (
+                {/* On utilise notre type UserProfileView ici */}
+                {users?.map((u: UserProfileView) => (
                   <tr key={u.id} className="bg-white border-b hover:bg-slate-50">
-                    {/* On accède directement à `u.email` car la vue a aplati les données */}
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email || 'Email non trouvé'}</td>
                     <td className="px-6 py-4">{u.full_name || '-'}</td>
                     <td className="px-6 py-4">
-                      {/* On utilise le composant client importé ici */}
                       <RoleSelector userId={u.id} currentRole={u.role} />
                     </td>
                   </tr>

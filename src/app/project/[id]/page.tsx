@@ -1,8 +1,8 @@
-
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image'; // Importer le composant Image
 import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
 
@@ -12,64 +12,36 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
-  // --- NOUVELLE CORRECTION : Approche plus robuste avec gestion d'erreurs ---
-
-  // 1. Authentifier l'utilisateur et vérifier les erreurs
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError) {
-    console.error("Erreur d'authentification Supabase:", userError.message);
-  }
-  // Log pour vérifier si l'utilisateur est bien connecté côté serveur
-  console.log("Utilisateur authentifié (ID):", user ? user.id : 'Aucun utilisateur connecté.');
-
-  // 2. Récupérer le projet
+  const { data: { user } } = await supabase.auth.getUser();
+  
   const projectId = params.id;
-  const { data: project, error: projectError } = await supabase
+  const { data: project } = await supabase
     .from('projects')
     .select()
     .eq('id', projectId)
     .single();
 
-  if (projectError) {
-    console.error(`Erreur lors de la récupération du projet (${projectId}):`, projectError.message);
-  }
   if (!project) {
-    console.log(`Projet avec ID ${projectId} non trouvé. Affichage de la page 404.`);
     notFound();
   }
 
-  // 3. Récupérer les groupes et leurs créations associées
-  const { data: creativeGroups, error: groupsError } = await supabase
+  const { data: creativeGroups } = await supabase
     .from('creative_groups')
     .select('*, creatives(*)')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
   
-  if (groupsError) {
-    console.error("Erreur lors de la récupération des groupes de créations:", groupsError.message);
-  }
-  // Log pour vérifier si des groupes sont trouvés
-  console.log("Nombre de groupes trouvés:", creativeGroups ? creativeGroups.length : 0);
-
-  // 4. Récupérer le rôle de l'utilisateur (si l'utilisateur existe)
   let userRole = 'client';
   if (user) {
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
-
-    if (profileError) {
-      console.error("Erreur lors de la récupération du profil utilisateur:", profileError.message);
-    }
     if (profile) {
       userRole = profile.role;
     }
   }
-  // Log pour vérifier le rôle final de l'utilisateur
-  console.log("Rôle de l'utilisateur:", userRole);
-  // --- FIN DE LA CORRECTION ---
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,12 +83,19 @@ export default async function ProjectPage({ params }: { params: { id: string } }
                             {latestVersion.file_url.endsWith('.mp4') ? (
                               <video src={latestVersion.file_url} muted playsInline className="object-cover w-full h-full" />
                             ) : (
-                              <img src={latestVersion.file_url} alt={group.name} className="object-cover w-full h-full" />
+                              /* --- CORRECTION ICI --- */
+                              <Image
+                                src={latestVersion.file_url}
+                                alt={group.name}
+                                width={96}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
                             )}
                           </div>
                         )}
                       </Link>
-
+                      
                       {(userRole === 'interne' || userRole === 'admin') && (
                         <form action={deleteCreativeGroup.bind(null, group.id, projectId)} className="ml-4 flex-shrink-0">
                           <button type="submit" className="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200">

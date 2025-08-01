@@ -8,7 +8,7 @@ type Props = {
 }
 
 export default function Header({ user, userRole, handleSignOut }: Props) {
-  console.log('[Header] userRole =', userRole)
+  
   return (
     <header className="flex flex-col items-start justify-between pb-4 border-b md:flex-row md:items-center border-slate-200">
       

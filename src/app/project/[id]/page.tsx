@@ -5,10 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
+import { NextPage } from 'next';
 
 export const dynamic = 'force-dynamic';
-
-// L'interface ProjectPageProps a été supprimée.
 
 type Creative = {
   id: string;
@@ -23,14 +22,17 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
-// Le type des props est maintenant défini "en ligne", directement ici.
-// C'est la méthode la plus sûre pour éviter les conflits de types sur Vercel.
-export default async function ProjectPage({ params }: { params: { id: string } }) {
+interface ProjectPageProps {
+  params: Promise<{ id: string }>;
+}
+
+const ProjectPage: NextPage<ProjectPageProps> = async ({ params }) => {
+  const { id } = await params; // Résoudre le Promise
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const projectId = params.id;
+  const projectId = id;
 
   const { data: project } = await supabase
     .from('projects')
@@ -133,4 +135,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       </main>
     </div>
   );
-}
+};
+
+export default ProjectPage;

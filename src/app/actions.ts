@@ -44,11 +44,14 @@ export async function signOutAction() {
  * Crée un nouveau projet.
  */
 export async function createProjectAction(formData: FormData) {
+  'use server'
+
   const name = formData.get('name') as string;
   const client_name = formData.get('client_name') as string;
 
   if (!name || !client_name) {
-    return { error: 'Le nom du projet et du client sont requis.' };
+    console.error('Le nom du projet et du client sont requis.');
+    return; // On s'arrête ici, sans retourner de valeur
   }
 
   const supabase = createSupabaseServerActionClient();
@@ -56,11 +59,11 @@ export async function createProjectAction(formData: FormData) {
 
   if (error) {
     console.error('ERREUR SUPABASE (createProjectAction):', error);
-    return { error: 'Une erreur est survenue lors de la création du projet.' };
+    // On ne retourne plus l'erreur au client, on la logue sur le serveur
+  } else {
+    // On ne revalide que si l'opération a réussi
+    revalidatePath('/');
   }
-
-  revalidatePath('/');
-  return { success: true };
 }
 
 

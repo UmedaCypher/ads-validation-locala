@@ -21,15 +21,15 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
-// ÉTAPE 1 : Définir une interface propre pour les props de la page
-interface ProjectPageProps {
-  params: {
-    id: string;
-  };
-}
+// MODIFICATION : Utiliser un type qui correspond exactement à ce que Next.js fournit.
+// Il inclut 'params' et 'searchParams'.
+type Props = {
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
 
-// ÉTAPE 2 : Utiliser cette nouvelle interface pour typer les props de la fonction
-export default async function ProjectPage({ params }: ProjectPageProps) {
+// MODIFICATION : Utiliser le nouveau type 'Props'
+export default async function ProjectPage({ params }: Props) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 

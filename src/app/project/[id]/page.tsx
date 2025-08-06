@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
-import { NextPage } from 'next';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +21,20 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
+// ÉTAPE 1 : Définir une interface propre pour les props de la page
 interface ProjectPageProps {
-  params: Promise<{ id: string }>;
+  params: {
+    id: string;
+  };
 }
 
-const ProjectPage: NextPage<ProjectPageProps> = async ({ params }) => {
-  const { id } = await params; // Résoudre le Promise
+// ÉTAPE 2 : Utiliser cette nouvelle interface pour typer les props de la fonction
+export default async function ProjectPage({ params }: ProjectPageProps) {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const projectId = id;
+  const projectId = params.id;
 
   const { data: project } = await supabase
     .from('projects')
@@ -135,6 +137,4 @@ const ProjectPage: NextPage<ProjectPageProps> = async ({ params }) => {
       </main>
     </div>
   );
-};
-
-export default ProjectPage;
+}

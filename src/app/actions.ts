@@ -178,8 +178,15 @@ export async function updateUserProfile(userId: string, formData: FormData) {
 /**
  * Supprime un groupe de créations et toutes les versions associées.
  */
-export async function deleteCreativeGroup(groupId: number, projectId: string) {
+export async function deleteCreativeGroup(formData: FormData) {
   const supabase = createSupabaseServerActionClient();
+
+  const groupId = Number(formData.get('groupId'));
+  const projectId = formData.get('projectId') as string;
+
+  if (!groupId || !projectId) {
+    return { error: 'IDs manquants pour la suppression.' };
+  }
   
   const { error } = await supabase
     .from('creative_groups')

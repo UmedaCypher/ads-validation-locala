@@ -131,7 +131,9 @@ export default async function ProjectPage({ params }: Props) {
                       </Link>
 
                       {(userRole === 'interne' || userRole === 'admin') && (
-                        <form action={deleteCreativeGroup.bind(null, group.id, projectId)} className="ml-4 flex-shrink-0">
+                        <form action={deleteCreativeGroup} className="ml-4 flex-shrink-0">
+                          <input type="hidden" name="groupId" value={group.id} />
+                          <input type="hidden" name="projectId" value={projectId} />
                           <button type="submit" className="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200">
                             Supprimer
                           </button>

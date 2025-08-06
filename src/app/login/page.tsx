@@ -3,16 +3,20 @@
 
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+// --- MODIFICATION 1 : Remplacer l'importation ---
+import { createBrowserClient } from '@supabase/ssr'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient()
+  // --- MODIFICATION 2 : Mettre à jour la création du client ---
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const router = useRouter()
 
   useEffect(() => {
-    // --- DÉBUT DE LA CORRECTION ---
     // On définit une fonction asynchrone à l'intérieur de useEffect
     const getSessionAndRedirect = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -23,7 +27,6 @@ export default function LoginPage() {
 
     // On appelle cette fonction
     getSessionAndRedirect()
-    // --- FIN DE LA CORRECTION ---
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -35,7 +38,7 @@ export default function LoginPage() {
     return () => {
       subscription?.unsubscribe()
     }
-  }, [supabase, router])
+  }, [router, supabase]) // On peut garder supabase ici, mais il est maintenant stable
 
 
   return (

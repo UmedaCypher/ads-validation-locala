@@ -1,6 +1,8 @@
 'use client'
-// src/app/creative/id/page.tsx
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+// src/app/creative/[id]/page.tsx
+
+// --- MODIFICATION 1 : Changer l'importation ---
+import { createBrowserClient } from '@supabase/ssr';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -10,7 +12,7 @@ import { User } from '@supabase/supabase-js';
 import { addComment, toggleCommentResolved, deleteComment, updateCommentPosition, updateCreativeStatus } from '@/app/actions';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
 
-// --- Types ---
+// --- Types (inchangés) ---
 type Creative = { id: number; file_url: string; version: number; status: string; creative_groups: { id: number; name: string; project_id: number; } | null; };
 type Profile = { id: string; role: string; full_name: string | null; };
 type Comment = {
@@ -20,12 +22,19 @@ type Comment = {
 };
 type CreativeVersion = { id: number; version: number; };
 
+// --- MODIFICATION 2 : Créer le client ici, une seule fois. ---
+// C'est plus performant et évite des rendus inutiles.
+const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 // --- Composant Principal ---
 export default function CreativePage() {
   const params = useParams();
   const router = useRouter();
   const creativeId = params.id as string;
-  const supabase = createClientComponentClient();
+  // La ligne de création du client est déplacée en dehors du composant.
 
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
@@ -63,7 +72,7 @@ export default function CreativePage() {
       setLoading(false);
     };
     if (creativeId) fetchData();
-  }, [creativeId, supabase, router]);
+  }, [creativeId, router]); // 'supabase' a été retiré des dépendances car il est maintenant stable (défini hors du composant)
 
   const handleCommentSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,7 +108,8 @@ export default function CreativePage() {
   const handleImageClick = (e: MouseEvent<HTMLDivElement>) => {
     if (newComment || draggingPin) return;
     const target = e.target as HTMLElement;
-    if (target.tagName !== 'IMG') return;
+    // Clic autorisé uniquement sur l'image elle-même, pas sur les épingles
+    if (!imageContainerRef.current?.contains(target) || target.tagName !== 'IMG') return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;

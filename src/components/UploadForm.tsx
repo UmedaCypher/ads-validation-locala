@@ -1,15 +1,22 @@
 'use client';
 
 import { useState, FormEvent, ChangeEvent } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+// --- MODIFICATION 1 : Remplacer l'importation ---
+import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 
 type Props = {
   projectId: string;
 };
 
+// --- MODIFICATION 2 : Créer le client une seule fois ici ---
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function UploadForm({ projectId }: Props) {
-  const supabase = createClientComponentClient();
+  // La création du client a été déplacée en dehors du composant.
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [groupName, setGroupName] = useState<string>('');
@@ -30,6 +37,7 @@ export default function UploadForm({ projectId }: Props) {
     setError(null);
 
     try {
+      // Le reste de la logique est inchangé car l'API de Supabase est la même.
       const filePath = `public/project_${projectId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('creatives')
@@ -62,7 +70,6 @@ export default function UploadForm({ projectId }: Props) {
         throw new Error(result.error || "Erreur lors de la sauvegarde.");
       }
 
-      // Réinitialise les champs
       router.refresh();
       setFile(null);
       setGroupName('');

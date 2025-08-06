@@ -1,17 +1,41 @@
 'use server'
 
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
+// --- MODIFICATION 1 : Remplacer les importations ---
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation' // Ajout de l'import pour redirect
+import { redirect } from 'next/navigation'
 
-// --- NOUVELLES ACTIONS AJOUTÉES ---
+// --- MODIFICATION 2 : Créer une fonction centralisée pour le client Supabase ---
+// Cela évite la répétition et rend le code plus propre.
+const createSupabaseServerActionClient = () => {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
+}
+
+// --- MODIFICATION 3 : Utiliser la nouvelle fonction dans toutes vos actions ---
 
 /**
  * Déconnecte l'utilisateur et le redirige vers la page de connexion.
  */
 export async function signOutAction() {
-  const supabase = createServerActionClient({ cookies: () => cookies() });
+  const supabase = createSupabaseServerActionClient();
   await supabase.auth.signOut();
   redirect('/login');
 }
@@ -27,7 +51,7 @@ export async function createProjectAction(formData: FormData) {
     return { error: 'Le nom du projet et du client sont requis.' };
   }
 
-  const supabase = createServerActionClient({ cookies: () => cookies() });
+  const supabase = createSupabaseServerActionClient();
   const { error } = await supabase.from('projects').insert({ name, client_name });
 
   if (error) {
@@ -40,13 +64,13 @@ export async function createProjectAction(formData: FormData) {
 }
 
 
-// --- VOS ACTIONS EXISTANTES (CONSERVÉES ET STANDARDISÉES) ---
+// --- VOS ACTIONS EXISTANTES ---
 
 /**
  * Ajoute un nouveau commentaire à une création.
  */
 export async function addComment(creativeId: string, userId: string, formData: FormData) {
-  const supabase = createServerActionClient({ cookies: () => cookies() })
+  const supabase = createSupabaseServerActionClient();
   const text_content = formData.get('commentText') as string;
   
   if (!text_content) {
@@ -77,7 +101,7 @@ export async function addComment(creativeId: string, userId: string, formData: F
  * Met à jour le statut d'une création.
  */
 export async function updateCreativeStatus(creativeId: number, status: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() })
+  const supabase = createSupabaseServerActionClient();
   const { error } = await supabase.from('creatives').update({ status: status }).eq('id', creativeId)
 
   if (error) {
@@ -93,7 +117,7 @@ export async function updateCreativeStatus(creativeId: number, status: string) {
  * Marque un commentaire comme résolu ou non résolu.
  */
 export async function toggleCommentResolved(commentId: number, isResolved: boolean, creativeId: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() })
+  const supabase = createSupabaseServerActionClient();
   const { data, error } = await supabase.from('comments').update({ is_resolved: isResolved }).eq('id', commentId).select().single();
 
   if (error) return { error: error.message };
@@ -106,7 +130,7 @@ export async function toggleCommentResolved(commentId: number, isResolved: boole
  * Supprime un commentaire.
  */
 export async function deleteComment(commentId: number, creativeId: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() })
+  const supabase = createSupabaseServerActionClient();
   const { data, error } = await supabase.from('comments').delete().eq('id', commentId).select().single();
   
   if (error) return { error: error.message };
@@ -119,7 +143,7 @@ export async function deleteComment(commentId: number, creativeId: string) {
  * Met à jour la position d'un commentaire localisé sur une création.
  */
 export async function updateCommentPosition(commentId: number, x: number, y: number, creativeId: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() })
+  const supabase = createSupabaseServerActionClient();
   await supabase.from('comments').update({ position_x: x, position_y: y }).eq('id', commentId);
   revalidatePath(`/creative/${creativeId}`);
 }
@@ -129,7 +153,7 @@ export async function updateCommentPosition(commentId: number, x: number, y: num
  * Met à jour le nom complet d'un utilisateur.
  */
 export async function updateUserProfile(userId: string, formData: FormData) {
-  const supabase = createServerActionClient({ cookies: () => cookies() });
+  const supabase = createSupabaseServerActionClient();
   const fullName = formData.get('fullName') as string;
 
   if (!fullName) {
@@ -155,7 +179,7 @@ export async function updateUserProfile(userId: string, formData: FormData) {
  * Supprime un groupe de créations et toutes les versions associées.
  */
 export async function deleteCreativeGroup(groupId: number, projectId: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() });
+  const supabase = createSupabaseServerActionClient();
   
   const { error } = await supabase
     .from('creative_groups')
@@ -176,7 +200,7 @@ export async function deleteCreativeGroup(groupId: number, projectId: string) {
  * Met à jour le rôle d'un utilisateur (action réservée aux admins).
  */
 export async function updateUserRole(userId: string, newRole: string) {
-  const supabase = createServerActionClient({ cookies: () => cookies() });
+  const supabase = createSupabaseServerActionClient();
   
   // On vérifie que le rôle est valide
   if (!['client', 'interne', 'admin'].includes(newRole)) {

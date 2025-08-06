@@ -1,6 +1,7 @@
 // Ce fichier est un Composant Serveur.
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+// --- MODIFICATION 1 : Remplacer l'importation ---
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -17,12 +18,25 @@ type UserProfileView = {
 }
 
 export default async function AdminUsersPage() {
-  const supabase = createServerComponentClient({ cookies: () => cookies() });
+  const cookieStore = cookies();
+  // --- MODIFICATION 2 : Mettre à jour la création du client ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  // La logique de redirection reste la même
   if (profile?.role !== 'admin' && profile?.role !== 'interne') {
     notFound();
   }
@@ -51,7 +65,7 @@ export default async function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {/* On utilise notre type UserProfileView ici */}
+                {/* Le reste du code JSX est inchangé */}
                 {users?.map((u: UserProfileView) => (
                   <tr key={u.id} className="bg-white border-b hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email || 'Email non trouvé'}</td>

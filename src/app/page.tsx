@@ -1,4 +1,5 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+// --- MODIFICATION 1 : Remplacer l'importation ---
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 
@@ -11,7 +12,18 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const cookieStore = cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
+  // --- MODIFICATION 2 : Mettre à jour la création du client ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
   
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -27,6 +39,7 @@ export default async function Home() {
     )
   }
 
+  // Le reste de la logique est inchangé
   const [
     { data: profile },
     { data: projects, error: projectsError }

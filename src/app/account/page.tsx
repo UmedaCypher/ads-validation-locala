@@ -1,14 +1,21 @@
 'use client'
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+// --- MODIFICATION 1 : Remplacer l'importation ---
+import { createBrowserClient } from '@supabase/ssr'
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, FormEvent } from 'react'
 import { updateUserProfile } from '@/app/actions'
 import Link from 'next/link'
 
+// --- MODIFICATION 2 : Créer le client une seule fois, en dehors du composant ---
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function AccountPage() {
-  const supabase = createClientComponentClient()
+  // La création du client a été déplacée.
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [fullName, setFullName] = useState<string>('')
@@ -30,7 +37,7 @@ export default function AccountPage() {
       setLoading(false)
     }
     fetchProfile()
-  }, [supabase, router])
+  }, [router]) // --- MODIFICATION 3 : 'supabase' est retiré des dépendances car il est maintenant stable.
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -62,10 +69,10 @@ export default function AccountPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700">Email</label>
-              <input 
-                type="email" 
-                value={user?.email || ''} 
-                disabled 
+              <input
+                type="email"
+                value={user?.email || ''}
+                disabled
                 className="block w-full p-2 mt-1 rounded-md shadow-sm text-slate-500 bg-slate-100 border-slate-300"
               />
             </div>
@@ -85,7 +92,7 @@ export default function AccountPage() {
             {message && <p className="text-sm text-center text-green-600">{message}</p>}
             <button
               type="submit"
-              className="w-full px-4 py-2 font-bold text-white transition-opacity rounded-lg shadow-sm bg-brand-dark-blue hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 font-bold text-white transition-opacity rounded-lg shadow-sm bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Mettre à jour
             </button>

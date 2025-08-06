@@ -179,13 +179,17 @@ export async function updateUserProfile(userId: string, formData: FormData) {
  * Supprime un groupe de créations et toutes les versions associées.
  */
 export async function deleteCreativeGroup(formData: FormData) {
+  'use server' // Assurez-vous que la directive est bien là
+  
   const supabase = createSupabaseServerActionClient();
 
   const groupId = Number(formData.get('groupId'));
   const projectId = formData.get('projectId') as string;
 
+  // On retire les "return" car l'action n'a pas besoin de renvoyer de valeur ici
   if (!groupId || !projectId) {
-    return { error: 'IDs manquants pour la suppression.' };
+    console.error('IDs manquants pour la suppression.');
+    return; // On peut retourner "void" simplement avec return;
   }
   
   const { error } = await supabase
@@ -195,11 +199,11 @@ export async function deleteCreativeGroup(formData: FormData) {
 
   if (error) {
     console.error('Erreur lors de la suppression du groupe de créations:', error);
-    return { error: error.message };
+    // On ne retourne plus l'erreur au client, on la logue sur le serveur
+  } else {
+    // On ne revalide le chemin que si la suppression a réussi
+    revalidatePath(`/project/${projectId}`);
   }
-
-  revalidatePath(`/project/${projectId}`);
-  return { success: true };
 }
 
 

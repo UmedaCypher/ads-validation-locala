@@ -1,10 +1,12 @@
 // src/components/CreateProjectForm.tsx
 
+// --- MODIFICATION : Mettre à jour le type de retour de la fonction ---
 type Props = {
-  handleCreateProject: (formData: FormData) => Promise<void>
+  handleCreateProject: (formData: FormData) => Promise<{ success: boolean; error?: string } | { success?: undefined; error: string } | void>;
 }
 
 export default function CreateProjectForm({ handleCreateProject }: Props) {
+  // Le reste du composant ne change pas
   return (
     <form action={handleCreateProject} className="flex flex-col gap-4">
       <div>

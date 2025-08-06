@@ -1,4 +1,5 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+// Import corrigé
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -7,6 +8,12 @@ import { deleteCreativeGroup } from '@/app/actions';
 import UploadForm from '@/components/UploadForm';
 
 export const dynamic = 'force-dynamic';
+
+// Les types restent les mêmes
+type Props = {
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
 
 type Creative = {
   id: string;
@@ -21,18 +28,24 @@ type CreativeGroup = {
   creatives: Creative[];
 };
 
-// MODIFICATION : Utiliser un type qui correspond exactement à ce que Next.js fournit.
-// Il inclut 'params' et 'searchParams'.
-type Props = {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
 
-// MODIFICATION : Utiliser le nouveau type 'Props'
 export default async function ProjectPage({ params }: Props) {
   const cookieStore = cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
+  // NOUVELLE FAÇON DE CRÉER LE CLIENT SUPABASE
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+
+  // Le reste de votre code ne change pas
   const { data: { user } } = await supabase.auth.getUser();
   const projectId = params.id;
 
@@ -81,6 +94,7 @@ export default async function ProjectPage({ params }: Props) {
 
           <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Créations</h2>
+            {/* Le reste de votre JSX ne change pas */}
             <div className="space-y-4">
               {creativeGroups && creativeGroups.length > 0 ? (
                 creativeGroups.map(group => {
